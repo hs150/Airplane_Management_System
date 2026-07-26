@@ -9,6 +9,7 @@ public class Booking {
     private String seatPreference;
     private double total;
     private String paymentStatus;
+    private String status = "Confirmed";
 
     public Booking(String pnr, Passenger passenger, Flight flight, String seatClass, int passengers, String seatPreference, double total, String paymentStatus) {
         this.pnr = pnr;
@@ -29,4 +30,7 @@ public class Booking {
     public String getSeatPreference() { return seatPreference; }
     public double getTotal() { return total; }
     public String getPaymentStatus() { return paymentStatus; }
+    public String getStatus() { return status; }
+    public boolean isCancelled() { return "Cancelled".equals(status); }
+    public void cancel() { status = "Cancelled"; }
 }

@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class LoginView extends JFrame {
+    private static final long serialVersionUID = 1L;
     private final JTextField usernameField = new JTextField();
     private final JPasswordField passwordField = new JPasswordField();
     private final JCheckBox showPasswordCheck = new JCheckBox("Show Password");
@@ -89,6 +90,10 @@ public class LoginView extends JFrame {
 
     public void addLoginListener(ActionListener listener) {
         loginButton.addActionListener(listener);
+    }
+
+    public void addExitListener(ActionListener listener) {
+        exitButton.addActionListener(listener);
     }
 
     public String getUsername() {

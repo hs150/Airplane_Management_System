@@ -60,4 +60,25 @@ public class Flight {
     public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
     public void setPrice(double price) { this.price = price; }
     public void setStatus(String status) { this.status = status; }
+
+    public void reserveSeats(int count) {
+        if (count <= 0 || count > availableSeats) {
+            throw new IllegalArgumentException("The requested number of seats is not available.");
+        }
+        bookedSeats += count;
+        availableSeats -= count;
+    }
+
+    public void releaseSeats(int count) {
+        if (count <= 0 || count > bookedSeats) {
+            throw new IllegalArgumentException("Cannot release the requested number of seats.");
+        }
+        bookedSeats -= count;
+        availableSeats += count;
+    }
+
+    @Override
+    public String toString() {
+        return flightNumber + " - " + source + " to " + destination;
+    }
 }

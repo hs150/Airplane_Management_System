@@ -56,4 +56,9 @@ public class Passenger {
     public void setFlightAssigned(String flightAssigned) { this.flightAssigned = flightAssigned; }
     public void setSeatNumber(String seatNumber) { this.seatNumber = seatNumber; }
     public void setBookingDate(String bookingDate) { this.bookingDate = bookingDate; }
+
+    @Override
+    public String toString() {
+        return passengerId + " - " + fullName;
+    }
 }

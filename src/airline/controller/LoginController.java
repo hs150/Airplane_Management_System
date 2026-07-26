@@ -15,6 +15,7 @@ public class LoginController {
     }
 
     private void init() {
+        view.addExitListener(e -> view.dispose());
         view.addLoginListener(e -> {
             String username = view.getUsername();
             String password = view.getPassword();

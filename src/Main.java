@@ -1,13 +1,12 @@
-import airline.controller.DashboardController;
+import airline.controller.LoginController;
 import airline.service.AirlineService;
-import airline.view.DashboardView;
+import airline.view.LoginView;
 
 public class Main {
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             AirlineService service = new AirlineService();
-            DashboardView dashboardView = new DashboardView("Preview Access");
-            new DashboardController(service, dashboardView);
+            new LoginController(service, new LoginView());
         });
     }
 }

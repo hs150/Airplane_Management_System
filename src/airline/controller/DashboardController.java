@@ -1,9 +1,16 @@
 package airline.controller;
 
-import airline.model.*;
+import airline.model.Flight;
+import airline.model.Passenger;
 import airline.service.AirlineService;
+import airline.view.BookingDialog;
 import airline.view.DashboardView;
+import airline.view.FlightDialog;
+import airline.view.PassengerDialog;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
+/** Connects dashboard UI events to the application service and refreshes displayed data. */
 public class DashboardController {
     private final AirlineService service;
     private final DashboardView view;
@@ -11,60 +18,175 @@ public class DashboardController {
     public DashboardController(AirlineService service, DashboardView view) {
         this.service = service;
         this.view = view;
-        init();
+        registerListeners();
+        refreshDashboard();
     }
 
-    private void init() {
+    private void registerListeners() {
+        view.addPassengerListener(event -> savePassenger(null));
+        view.editPassengerListener(event -> editSelectedPassenger());
+        view.deletePassengerListener(event -> deleteSelectedPassenger());
+        view.addFlightListener(event -> saveFlight(null));
+        view.editFlightListener(event -> editSelectedFlight());
+        view.deleteFlightListener(event -> deleteSelectedFlight());
+        view.addBookingListener(event -> createBooking());
+        view.cancelBookingListener(event -> cancelSelectedBooking());
+        registerSearchListeners();
+    }
+
+    private void registerSearchListeners() {
+        view.passengerSearchListener(onChange(this::refreshPassengerTable));
+        view.flightSearchListener(onChange(this::refreshFlightTable));
+        view.bookingSearchListener(onChange(this::refreshBookingTable));
+    }
+
+    private void editSelectedPassenger() {
+        String passengerId = view.selectedPassengerId();
+        if (passengerId == null) {
+            view.showError("Select a passenger to edit.");
+            return;
+        }
+        savePassenger(service.findPassenger(passengerId));
+    }
+
+    private void savePassenger(Passenger existingPassenger) {
+        Passenger passenger = PassengerDialog.showDialog(view, existingPassenger);
+        if (passenger == null) {
+            return;
+        }
+        try {
+            service.savePassenger(passenger);
+            refreshDashboard();
+            view.showMessage("Passenger " + actionName(existingPassenger == null) + " successfully.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void deleteSelectedPassenger() {
+        String passengerId = view.selectedPassengerId();
+        if (passengerId == null) {
+            view.showError("Select a passenger to delete.");
+            return;
+        }
+        if (!view.confirm("Delete passenger " + passengerId + "?")) {
+            return;
+        }
+        try {
+            service.deletePassenger(passengerId);
+            refreshDashboard();
+            view.showMessage("Passenger deleted.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void editSelectedFlight() {
+        String flightNumber = view.selectedFlightNumber();
+        if (flightNumber == null) {
+            view.showError("Select a flight to edit.");
+            return;
+        }
+        saveFlight(service.findFlight(flightNumber));
+    }
+
+    private void saveFlight(Flight existingFlight) {
+        Flight flight = FlightDialog.showDialog(view, existingFlight);
+        if (flight == null) {
+            return;
+        }
+        try {
+            service.saveFlight(flight);
+            refreshDashboard();
+            view.showMessage("Flight " + actionName(existingFlight == null) + " successfully.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void deleteSelectedFlight() {
+        String flightNumber = view.selectedFlightNumber();
+        if (flightNumber == null) {
+            view.showError("Select a flight to delete.");
+            return;
+        }
+        if (!view.confirm("Delete flight " + flightNumber + "?")) {
+            return;
+        }
+        try {
+            service.deleteFlight(flightNumber);
+            refreshDashboard();
+            view.showMessage("Flight deleted.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void createBooking() {
+        BookingDialog.Request request = BookingDialog.showDialog(view, service.getPassengers(), service.getFlights());
+        if (request == null) {
+            return;
+        }
+        try {
+            String pnr = service.createBooking(request.passengerId(), request.flightNumber(), request.seatClass(),
+                    request.passengerCount(), request.seatPreference()).getPnr();
+            refreshDashboard();
+            view.showMessage("Booking " + pnr + " created successfully.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void cancelSelectedBooking() {
+        String pnr = view.selectedBookingPnr();
+        if (pnr == null) {
+            view.showError("Select a booking to cancel.");
+            return;
+        }
+        if (!view.confirm("Cancel booking " + pnr + "?")) {
+            return;
+        }
+        try {
+            service.cancelBooking(pnr);
+            refreshDashboard();
+            view.showMessage("Booking cancelled and seats released.");
+        } catch (IllegalArgumentException exception) {
+            view.showError(exception.getMessage());
+        }
+    }
+
+    private void refreshDashboard() {
         view.setSummaryValues(
                 String.valueOf(service.getFlights().size()),
                 String.valueOf(service.getPassengers().size()),
                 String.valueOf(service.getBookings().size()),
-                "1"
-        );
-        view.refreshPassengerTable(service.getPassengers());
-        view.refreshFlightTable(service.getFlights());
-        view.refreshBookingTable(service.getBookings());
+                String.valueOf(service.getFlights().stream().filter(flight -> "Delayed".equalsIgnoreCase(flight.getStatus())).count()));
+        refreshPassengerTable();
+        refreshFlightTable();
+        refreshBookingTable();
+    }
 
-        view.addPassengerListener(e -> {
-            Passenger p = new Passenger("P003", "John Doe", 32, "Male", "P12345", "Indian", "9876543210", "john@example.com", "Delhi", "AI101", "12A", "2026-07-26");
-            service.addPassenger(p);
-            view.setSummaryValues(
-                    String.valueOf(service.getFlights().size()),
-                    String.valueOf(service.getPassengers().size()),
-                    String.valueOf(service.getBookings().size()),
-                    "1"
-            );
-            view.refreshPassengerTable(service.getPassengers());
-            view.showMessage("Passenger added successfully.");
-        });
+    private void refreshPassengerTable() {
+        view.refreshPassengerTable(service.searchPassengers(view.passengerQuery()));
+    }
 
-        view.addFlightListener(e -> {
-            Flight f = new Flight("AI303", "Bangalore", "Chennai", "16:00", "18:20", "2h20m", "Airbus A321", "S. Kumar", 200, 70, 130, 8100, "Scheduled");
-            service.addFlight(f);
-            view.setSummaryValues(
-                    String.valueOf(service.getFlights().size()),
-                    String.valueOf(service.getPassengers().size()),
-                    String.valueOf(service.getBookings().size()),
-                    "1"
-            );
-            view.refreshFlightTable(service.getFlights());
-            view.showMessage("Flight added successfully.");
-        });
+    private void refreshFlightTable() {
+        view.refreshFlightTable(service.searchFlights(view.flightQuery()));
+    }
 
-        view.addBookingListener(e -> {
-            Passenger passenger = service.getPassengers().isEmpty() ? null : service.getPassengers().get(0);
-            Flight flight = service.getFlights().isEmpty() ? null : service.getFlights().get(0);
-            if (passenger != null && flight != null) {
-                Booking booking = service.createBooking(passenger, flight, "Business", 1, "Window");
-                view.setSummaryValues(
-                        String.valueOf(service.getFlights().size()),
-                        String.valueOf(service.getPassengers().size()),
-                        String.valueOf(service.getBookings().size()),
-                        "1"
-                );
-                view.refreshBookingTable(service.getBookings());
-                view.showMessage("Booking created: " + booking.getPnr());
-            }
-        });
+    private void refreshBookingTable() {
+        view.refreshBookingTable(service.searchBookings(view.bookingQuery()));
+    }
+
+    private String actionName(boolean isNew) {
+        return isNew ? "added" : "updated";
+    }
+
+    private DocumentListener onChange(Runnable action) {
+        return new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent event) { action.run(); }
+            @Override public void removeUpdate(DocumentEvent event) { action.run(); }
+            @Override public void changedUpdate(DocumentEvent event) { action.run(); }
+        };
     }
 }
