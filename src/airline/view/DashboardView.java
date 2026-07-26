@@ -23,8 +23,8 @@ public class DashboardView extends JFrame {
     private final JButton addBookingButton = new JButton("Create Booking");
 
     public DashboardView(String loggedUser) {
-        setTitle("SkyLine Airways - Dashboard");
-        setSize(1200, 760);
+        setTitle("SkyLine Airways - Public Preview");
+        setSize(1280, 780);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(12, 12));
@@ -32,11 +32,12 @@ public class DashboardView extends JFrame {
         JPanel top = new JPanel(new BorderLayout());
         top.setBackground(new Color(21, 101, 192));
         top.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
-        JLabel title = new JLabel("SkyLine Airways Management Dashboard");
+        JLabel title = new JLabel("SkyLine Airways Management Preview");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Segoe UI", Font.BOLD, 20));
         top.add(title, BorderLayout.WEST);
-        userLabel.setForeground(Color.WHITE);
+        userLabel.setForeground(new Color(232, 244, 255));
+        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         top.add(userLabel, BorderLayout.EAST);
 
         JPanel center = new JPanel(new BorderLayout(10, 10));
@@ -68,8 +69,8 @@ public class DashboardView extends JFrame {
         add(center, BorderLayout.CENTER);
         setVisible(true);
 
-        userLabel.setText("Logged in: " + loggedUser);
-        setSummaryValues("2", "0", "0", "0");
+        userLabel.setText("Public Preview • " + loggedUser + " • No login required");
+        setSummaryValues("3", "2", "2", "1");
     }
 
     private JPanel card(String title, JLabel valueLabel) {

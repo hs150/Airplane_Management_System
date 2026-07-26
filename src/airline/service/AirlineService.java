@@ -1,5 +1,6 @@
 package airline.service;
 
+import airline.database.PreviewDataStore;
 import airline.model.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +15,10 @@ public class AirlineService {
 
     public AirlineService() {
         users.put("admin", new UserAccount("admin", "admin123", "Admin User"));
-        flights.add(new Flight("AI101", "Mumbai", "Delhi", "08:30", "10:45", "2h15m", "Boeing 737", "A. Sharma", 180, 45, 135, 6200, "On Time"));
-        flights.add(new Flight("AI202", "Delhi", "Kolkata", "11:45", "14:10", "2h25m", "Airbus A320", "R. Mehta", 160, 80, 80, 7400, "Scheduled"));
+        PreviewDataStore store = new PreviewDataStore();
+        flights.addAll(store.getFlights());
+        passengers.addAll(store.getPassengers());
+        bookings.addAll(store.getBookings());
     }
 
     public boolean login(String username, String password) {
