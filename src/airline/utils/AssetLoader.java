@@ -1,9 +1,9 @@
 package airline.utils;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
+import javax.swing.*;
 
 public class AssetLoader {
     public static ImageIcon loadImage(String path, int width, int height) {
